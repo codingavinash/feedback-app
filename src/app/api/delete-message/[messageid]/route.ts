@@ -1,11 +1,11 @@
 import { getServerSession } from "next-auth";
-import { authOptions } from "../auth/[...nextauth]/options";
+import { authOptions } from "../../auth/[...nextauth]/options";
 import dbConnect from "@/lib/dbConnect";
 import UserModel from "@/model/User";
 import { User } from "next-auth";
-import mongoose from "mongoose";
 
-export async function GET(request: Request) {
+export async function DELETE(request: Request, {params}: {params: {messageid: string}}) {
+    const messageId = params.messageid
     await dbConnect()
 
     const session = await getServerSession(authOptions)
@@ -19,39 +19,33 @@ export async function GET(request: Request) {
             status: 401
         })
     }
-
-    const  userId = new mongoose.Types.ObjectId(user._id)
-
+    
     try {
-        const userMessages  =  await UserModel.aggregate([
-            {$match:{_id: userId}},
-            {$unwind: '$messages'},
-            {$sort: {'messages.createdAt': -1}},
-            {$group: {_id: '$_id', messages: {$push: '$messages'}}}
-        ])
-        console.log(userMessages)
+        const updateResult = await UserModel.updateOne(
+            {_id: user._id},
+            {$pull: {messages: {_id: messageId}}}
+        )
 
-        if(!userMessages  || userMessages .length === 0){
+        if(updateResult.modifiedCount == 0){
             return Response.json({
                 success: false,
-                message: "User not found"
+                message: "Message not found or already deleted"
             },{
-                status: 500
+                status: 404
             })
         }
 
         return Response.json({
             success: true,
-            messages: userMessages[0].messages
+            message: "Message successfully deleted"
         },{
             status: 200
         })
     } catch (error) {
-        console.log("An unexpeted Error occured", error)
-
+        console.log("Error in delete message route", error)
         return Response.json({
             success: false,
-            message: "Error in getting messages from user"
+            message: "Error deleting message"
         },{
             status: 500
         })
