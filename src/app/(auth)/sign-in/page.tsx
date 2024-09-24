@@ -35,7 +35,7 @@ const Page =()=>{
           variant: "destructive"
         })
     }
-    if(result?.url){
+    if(result?.ok){
       router.replace('/dashboard')
     }
     return 0;

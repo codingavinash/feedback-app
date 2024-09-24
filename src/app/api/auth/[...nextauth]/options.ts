@@ -40,12 +40,7 @@ export const authOptions: NextAuthOptions = {
                         return user
                     }
                     else{
-                        return {
-                            _id: "1121521545",
-                            username:"Avinash",
-                            isVerified: "true",
-                            isAcceptingMessages: true
-                        }
+                        return null;
                     }
                 } catch (error: any) {
                     throw new Error(error)
